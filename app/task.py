@@ -7,7 +7,7 @@ import os
 from tkinter import messagebox
 
 
-def task(prelogfile,postlogfile,planned_cells):
+def task(prelogfile,postlogfile,planned_cells,tf_file_name):
     try:
         
         tday=date.today().strftime("%d-%m-%Y")
@@ -25,9 +25,18 @@ def task(prelogfile,postlogfile,planned_cells):
 
         for line in planned_cells_reader:
             modified_planned_cells_reader.append(line.strip())
-        
-        modified_planned_cells_reader=list(set(modified_planned_cells_reader))
-        
+
+
+        file3=open(tf_file_name,"r")
+        tf_file_reader=file3.readlines()
+        modified_tf_file_reader=[]
+
+        for line in tf_file_reader:
+            modified_tf_file_reader.append(line.strip())
+
+        for k in range(0,len(modified_tf_file_reader)):
+            if len(re.findall("\AEND",modified_tf_file_reader[k])):
+                break
 
         for i in range(0,len(modified_pre_reader)):
             if len(re.findall("\AEND",modified_pre_reader[i])):
@@ -36,6 +45,8 @@ def task(prelogfile,postlogfile,planned_cells):
         pre_stg_dict=dict()     # dictionary cell-input/sector:stg
         pre_chgr_dict=dict()    # dictionary cell-input/sector:chgr
         pre_stg_rsite=dict()    # dictionary cell_input/sector:rsite
+        tf_offset_dict=dict()   # dictionary stg/tf:offset
+        pre_stg_sector=[]
         for j in range(i, len(modified_pre_reader)):
             line=modified_pre_reader[j].split()
             if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0:
@@ -46,10 +57,52 @@ def task(prelogfile,postlogfile,planned_cells):
             
             elif len(line)>0 and modified_pre_reader[j].split()[0] in pre_chgr_dict:
                 pre_chgr_dict[line[0]].append(line[1])
+
+        
+        ################################# Creating Dictionary for Rsite ###############################################
         for j in range(0,i+1):
             line=modified_pre_reader[j].split()
-            if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0 and line[1] in pre_chgr_dict:
+            if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0 and line[0] in pre_stg_dict.values():
                 pre_stg_rsite[line[1]]=line[2]
+                pre_stg_sector.append(line[1])
+
+                    
+        ############################### Removing Cells with no chgr ###################################################
+        pre_chgr_dict_keys=list(pre_chgr_dict.keys())
+        rejected_cell_chgr=[]
+        for j in range(0, len(pre_chgr_dict_keys)):
+            if len(pre_chgr_dict[pre_chgr_dict_keys[j]])==0:
+                del pre_chgr_dict[pre_chgr_dict_keys[j]]
+                del pre_stg_dict[pre_chgr_dict_keys[j]]
+                del pre_stg_rsite[pre_chgr_dict_keys[j]]
+                rejected_cell_chgr.append(pre_chgr_dict_keys[j])
+        
+        tg_no_list=[]
+        for j in pre_stg_dict.values():
+            tg_no_list.append(j[6:])
+        
+
+         ################################# Creating Dictionary for tf_offset and tf softsync ###########################################
+
+        for j in range(0,k+1):
+            line=modified_tf_file_reader[j].split()
+            if len(re.findall("\ARXSTF",modified_tf_file_reader[j]))>0:
+                temp=line[0][6:]
+                if temp in tg_no_list:
+                    tf_offset_dict[temp]=line[1]
+
+        tf_softsync_dict=dict()
+        tf_aligntype_dict=dict()
+        for j in range(k,len(modified_tf_file_reader)):
+            if len(re.findall("\ARXSTG",modified_tf_file_reader[j]))>0:
+                line=modified_tf_file_reader[j].split()
+                if line[0] in pre_stg_dict.values():
+                    tf_softsync_dict[line[0].lower()]=line[1]
+                    if line[1]=="ON":
+                        tf_aligntype_dict[line[0].lower()]=line[2]
+                    else:
+                        tf_aligntype_dict[line[0].lower()]=" "
+
 
         tg_list=list(pre_stg_dict.values())         # getting the list of all the prelog tg
         rsite_list=list(pre_stg_rsite.values())     # getting the list of all the prelog rsite
@@ -97,54 +150,83 @@ def task(prelogfile,postlogfile,planned_cells):
         cell_halte_in_source_bsc=[]
         tg_block_source_bsc_rxbli=[]
         tg_block_source_bsc_rxese=[]
-
-
-
+        offset=[]
+        softsync=[]
+        aligntype=[]
+        tf_offset=[]
+        softsync_dt=[]
+        
         pre_chgr_list=list(pre_chgr_dict.values())
         for j in range(0,len(pre_chgr_list)):
             for k in range(0,len(pre_chgr_list[j])):
-                cell_input.append(cell_input_list[j])
-                chgr.append(pre_chgr_list[j][k])
-                rsite.append(rsite_list[j])
-                newtg.append(new_tg[j])
-                oldtg.append(int(tg_list[j][6:]))
-                if k==0:
-                    temp1=f"rxmoi:mo=rxstg-{new_tg[j]},Sector={cell_input_list[j][0:6]}_{cell_input_list[j][6:]},RSITE={rsite_list[j]};"
-                    new_tg_defination_in_destination_bsc.append(temp1)
+                if tg_list[j][6:] in tf_offset_dict:
+                    offset.append(tf_offset_dict[tg_list[j][6:]])
+                    aligntype.append(tf_aligntype_dict[tg_list[j]])
+                    softsync.append(tf_softsync_dict[tg_list[j]])
+                    cell_input.append(cell_input_list[j])
+                    chgr.append(pre_chgr_list[j][k])
+                    rsite.append(rsite_list[j])
+                    newtg.append(new_tg[j])
+                    oldtg.append(int(tg_list[j][6:]))
                     
-                    temp2=f"rxesi:mo=rxstg-{new_tg[j]};"
-                    tg_deblock_iu_destination_bsc_rxesi.append(temp2)
+                    if k==0:
+                        temp1=f"rxmoi:mo=rxstg-{new_tg[j]},Sector={pre_stg_sector[j]},RSITE={rsite_list[j]};"
+                        new_tg_defination_in_destination_bsc.append(temp1)
+                        
+                        temp2=f"rxesi:mo=rxstg-{new_tg[j]};"
+                        tg_deblock_iu_destination_bsc_rxesi.append(temp2)
 
-                    temp3=f"rxble:mo=rxstg-{new_tg[j]};"
-                    tg_deblock_iu_destination_bsc_rxble.append(temp3)
+                        temp3=f"rxble:mo=rxstg-{new_tg[j]};"
+                        tg_deblock_iu_destination_bsc_rxble.append(temp3)
 
-                else:
-                    temp1=""
-                    new_tg_defination_in_destination_bsc.append(temp1)
+                        if softsync[j+k]=="ON":
+                            temp4=f"RXMSC:MO=RXSTF-{tg_list[j][6:]},FSOFFSET={offset[j+k]}"
+                            temp5=f"rxtsi:mo=RXSTG-{tg_list[j][6:]},ALIGNTYPE={aligntype[j+k]};"
+                        else:
+                            temp4=""
+                            temp5=""
+                        
+                        tf_offset.append(temp4)
+                        softsync_dt.append(temp5)
+                    else:
+                        temp1=""
+                        new_tg_defination_in_destination_bsc.append(temp1)
 
-                    temp2=""
-                    tg_deblock_iu_destination_bsc_rxesi.append(temp2)
+                        temp2=""
+                        tg_deblock_iu_destination_bsc_rxesi.append(temp2)
 
-                    temp3=""
-                    tg_deblock_iu_destination_bsc_rxble.append(temp3)
+                        temp3=""
+                        tg_deblock_iu_destination_bsc_rxble.append(temp3)
+                        
+                        temp4=""
+                        tf_offset.append(temp4)
+
+                        temp5=""
+                        softsync_dt.append(temp5)
+                    
+                    chgr_var=str(pre_chgr_list[j][k])
+                    if len(chgr_var)==0:
+                        chgr_var="NA"
+                    temp2=f"rxtci:mo=rxstg-{new_tg[j]},cell={cell_input_list[j]},chgr={chgr_var};"
+                    chgr_allocation_in_destination_bsc.append(temp2)
+
+                    temp3=f"rlstc:cell={cell_input_list[j]},chgr={chgr_var},state=active;"
+                    cell_active_in_destination_bsc.append(temp3)
+
+                    temp4=f"rlstc:cell={cell_input_list[j]},chgr={chgr_var},state=halted;"
+                    cell_halte_in_source_bsc.append(temp4)
+                    
+                    temp5=f"rxbli:mo={tg_list[j]};"
+                    tg_block_source_bsc_rxbli.append(temp5)
+
+                    temp6=f"rxese:mo={tg_list[j]};"
+                    tg_block_source_bsc_rxese.append(temp6)
                 
-                temp2=f"rxtci:mo=rxstg-{new_tg[j]},cell={cell_input_list[j]},chgr={pre_chgr_list[j][k]};"
-                chgr_allocation_in_destination_bsc.append(temp2)
-
-                temp3=f"rlstc:cell={cell_input_list[j]},chgr={pre_chgr_list[j][k]},state=active;"
-                cell_active_in_destination_bsc.append(temp3)
-
-                temp4=f"rlstc:cell={cell_input_list[j]},chgr={pre_chgr_list[j][k]},state=halted;"
-                cell_halte_in_source_bsc.append(temp4)
-                
-                temp5=f"rxbli:mo={tg_list[j]};"
-                tg_block_source_bsc_rxbli.append(temp5)
-
-                temp6=f"rxese:mo={tg_list[j]};"
-                tg_block_source_bsc_rxese.append(temp6)
+                else: 
+                    rejected_cell_chgr.append(cell_input_list[j])
 
         pd.set_option('display.max_columns', None)
-        dataframe_dictionary={"CELL_INPUT":cell_input,"CHGR":chgr,"RSITE":rsite,"NEW TG":newtg,"OLD TG":oldtg,"NEW_TG_defination_in_destination_bsc":new_tg_defination_in_destination_bsc,"chgr_allocation in destination bsc":chgr_allocation_in_destination_bsc,"tg deblock iu destination bsc (rxesi)":tg_deblock_iu_destination_bsc_rxesi,"tg deblock iu destination bsc (rxble)":tg_deblock_iu_destination_bsc_rxble,"cell active in destination bsc":cell_active_in_destination_bsc,"cell halte in source bsc":cell_halte_in_source_bsc,"TG block in source BSC (rxbli)":tg_block_source_bsc_rxbli,"TG block in source BSC (rxese)":tg_block_source_bsc_rxese}
+        dataframe_dictionary={"CELL_INPUT":cell_input,"CHGR":chgr,"RSITE":rsite,"NEW TG":newtg,"OLD TG":oldtg,"OFFSET":offset,"Softsync":softsync,"NEW_TG_defination_in_destination_bsc":new_tg_defination_in_destination_bsc,"chgr_allocation in destination bsc":chgr_allocation_in_destination_bsc,"tg deblock iu destination bsc (rxesi)":tg_deblock_iu_destination_bsc_rxesi,"tg deblock iu destination bsc (rxble)":tg_deblock_iu_destination_bsc_rxble,"cell active in destination bsc":cell_active_in_destination_bsc,"cell halte in source bsc":cell_halte_in_source_bsc,"TG block in source BSC (rxbli)":tg_block_source_bsc_rxbli,"TG block in source BSC (rxese)":tg_block_source_bsc_rxese,"TF_OFFSET":tf_offset,"SoftSync_DT":softsync_dt}
         df=pd.DataFrame(dataframe_dictionary)
 
         # print("\nlength of cell input: ",len(cell_input))
@@ -169,8 +251,8 @@ def task(prelogfile,postlogfile,planned_cells):
         workbook=writer.book
         worksheet=writer.sheets['Sheet 1']
 
-        red_headers=[1,2,4,10,11,12]
-        green_headers=[3,5,6,7,8,9]
+        red_headers=[1,2,4,5,6,7,13,14,15]
+        green_headers=[3,8,9,10,11,12,16,17]
 
         format_red=workbook.add_format({'bold':True,'fg_color':'#ff1a1a','font_color':'#000000','border':1})
         format_green=workbook.add_format({'bold':True,'fg_color':'#00ff55','font_color':'#000000','border':1})
@@ -291,7 +373,7 @@ def task(prelogfile,postlogfile,planned_cells):
         for j in range(0,len(tg_deblock_iu_destination_bsc_rxesi)):
             line=tg_deblock_iu_destination_bsc_rxesi[j]
             line2=tg_deblock_iu_destination_bsc_rxble[j]
-            my_str+=line+"\n"+line2+"\n\n"
+            my_str+=line+"\n"+line2+"\n"
         
 
         file.write(my_str)
@@ -318,7 +400,7 @@ def task(prelogfile,postlogfile,planned_cells):
         ##############   C:\RAN\Destination\Cell_halte_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ########################################
         ##################################################################################################################################################
 
-        fil=rf"C:\RAN\Source    \Cell_halte_in_source_bsc-{tday}.txt"
+        fil=rf"C:\RAN\Source\Cell_halte_in_source_bsc-{tday}.txt"
         my_str=""
         for line in cell_halte_in_source_bsc:
             my_str+=line+"\n"
@@ -329,7 +411,7 @@ def task(prelogfile,postlogfile,planned_cells):
         messagebox.showinfo("   File creation was successful",rf'C:\RAN\Source\Cell_halte_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Source\Tg_block_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ##################################################
+        ##############   C:\RAN\Source\Tg_block_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ###############################################
         ##################################################################################################################################################
         
         fil=rf"C:\RAN\Source\Tg_block_in_source_bsc-{tday}.txt"
@@ -339,16 +421,39 @@ def task(prelogfile,postlogfile,planned_cells):
         for j in range(0,len(tg_block_source_bsc_rxbli)):
             line=tg_block_source_bsc_rxbli[j]
             line2=tg_block_source_bsc_rxese[j]
-            my_str+=line+"\n"+line2+"\n\n"
+            my_str+=line+"\n"+line2+"\n"
         
 
         file.write(my_str)
 
         messagebox.showinfo("   File creation was successful",rf'C:\RAN\Source\Tg_block_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
-
+        ##################################################################################################################################################
+        ##############   C:\RAN\Source\Softsync_dt-{}.format(date.today().strftime("%d-%m-%Y")) ##################################################
+        ##################################################################################################################################################
+        fil=rf"C:\RAN\Source\Softsync_dt-{tday}.txt"
+        my_str=""
+        for j in range(0,len(softsync_dt)):
+            line=tf_offset[j]
+            line2=softsync_dt[j]
+            if line==" ":
+                continue
+            else:
+                my_str+=line+"\n"+line2+"\n"
+        
+        file=open(fil,"w")
+        file.write(my_str)
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Source\Softsync_dt-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         file.close()
+        file2.close()
+        file3.close()
+
+        if len(set(modified_planned_cells_reader))-len(set(pre_stg_rsite.keys()))>0:
+            messagebox.showwarning("    Set of cells which was not included in scripts",set(modified_planned_cells_reader)-set(pre_stg_rsite.keys()))
+        
+        if len(rejected_cell_chgr)>0:
+            messagebox.showwarning("    Cells for which we can't create commands",list(set(rejected_cell_chgr)))
 
         messagebox.showinfo("   Successful execution","All the files were successfully created")
 
