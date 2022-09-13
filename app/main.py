@@ -36,7 +36,7 @@ class App:
         self.main_win.iconbitmap(self.current_folder+"images\ericsson-blue-icon-logo.ico")
         self.main_win_canvas.grid(row=0,column=0,columnspan=4,sticky=NW)
 
-        self.options=["Select a task to start                           ","1. RAN IP Site Migration Script Tool","2. Json File Creation Script Tool         "]
+        self.options=["Select a task to start                           ","1. RAN IP Site Migration Tool","2. Json File Creation Tool         "]
         self.main_win_drop_down_var=StringVar()
         self.main_win_drop_down_var.set("Select a task to start")
         self.main_win_drop_down=ttk.OptionMenu(self.main_win,self.main_win_drop_down_var,*self.options)
@@ -51,10 +51,10 @@ class App:
 
     def submit(self,event):
         self.my_str=str(self.main_win_drop_down_var.get())
-        if self.my_str=="1. RAN IP Site Migration Script Tool":
+        if self.my_str=="1. RAN IP Site Migration Tool":
             self.Ran_IP_Site_Migration_Script_Tool()
         
-        elif self.my_str=="2. Json File Creation Script Tool         ":
+        elif self.my_str=="2. Json File Creation Tool         ":
             self.json_file_creation_script()
     
     def json_file_creation_script(self):
@@ -63,13 +63,14 @@ class App:
         self.master1.title("    Json File Creation Script Tool")
         self.master1.config(bg="#00008B")
         self.master1.bind("<Escape>",self.quit_json_file_creation_tool)
+        self.master1.bind("<Return>",self.start_json_file_creation)
         self.master1.iconbitmap(self.current_folder+"images\ericsson-blue-icon-logo.ico")
         self.master1.geometry("750x510")
         self.master1.resizable(0,0)
 
-        file_dir=["c:\\RAN\\JSON"]
-        if not os.path.exists("c:\\RAN"):
-             os.mkdir("c:\\RAN")
+        file_dir=["c:\\RAN_Automations\\JSON"]
+        if not os.path.exists("c:\\RAN_Automations"):
+             os.mkdir("c:\\RAN_Automations")
         
         for j in range(0,len(file_dir)):
             if os.path.exists(file_dir[j]):
@@ -128,7 +129,7 @@ class App:
         self.drafted_by_label_0.grid(row=19,column=1)
         self.drafted_by_label_1.grid(row=19,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
 
-        
+        self.master1.protocol("WM_DELETE_WINDOW",lambda:self.quit_json_file_creation_tool(1))
         self.master1.mainloop()
         if self.master1.state()!="normal":
             sys.exit(0)
@@ -136,7 +137,7 @@ class App:
     def Ran_IP_Site_Migration_Script_Tool(self):
         self.master=Toplevel(self.main_win)
         self.main_win.withdraw()
-        self.master.title("    RAN IP Site Migration Script Tool")
+        self.master.title("    RAN IP Site Migration Tool")
         self.master.config(bg="#00008B")
         self.master.bind("<Escape>",self.quit_RAN_IP_Site_Migration_Tool)
         self.master.iconbitmap(self.current_folder+"images\ericsson-blue-icon-logo.ico")
@@ -144,9 +145,12 @@ class App:
         self.master.resizable(0,0)     # cannot resize the window
     
         
-        file_dir=["c:\\RAN\\Date","c:\\RAN\\Destination","c:\\RAN\\Source","c:\\RAN\\IP_mig_dt-excel_file"]
-        if not os.path.exists("c:\\RAN"):
-             os.mkdir("c:\\RAN")
+        file_dir=["c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool\\Date","c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool\\Destination","c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool\\Source","c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool\\IP_mig_dt-excel_file"]
+        if not os.path.exists("c:\\RAN_Automations"):
+             os.mkdir("c:\\RAN_Automations")
+             
+        if not os.path.exists("c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool"):
+             os.mkdir("c:\\RAN_Automations\\RAN_IP_Site_Migration_Tool")
         
         for j in range(0,len(file_dir)):
             if os.path.exists(file_dir[j]):
@@ -176,15 +180,16 @@ class App:
 
         
         self.pre_log_fetch_label_1=ttk.Label(self.master,text="Source BSC Logs File",font="Roboto 12 bold",background="#00008B",foreground="#ffffff")
-        self.pre_log_fetch_label_2=ttk.Label(self.master,text="Info: Logs of:rxmop:moty=rxstg;|rxtcp:moty=rxstg;",font=("Roboto 9"),background="#00008B",foreground="#ffffff")
-
+        self.pre_log_fetch_label_2=Text(self.master,height=1,width=40,relief="flat",font=('Roboto',12),fg="#ffffff",bg="#00008B")
+        self.pre_log_fetch_label_2.insert(END,"Info: Logs of:rxmop:moty=rxstg;|rxtcp:moty=rxstg;")
+        self.pre_log_fetch_label_2.configure(state=DISABLED)
         
         
         self.pre_log_fetch_button=ttk.Button(self.master,text="Browse",command=self.pre_log_fetch)
         
 
         self.pre_log_fetch_label_1.grid(row=1,column=0,padx=10,ipadx=10,columnspan=2)
-        self.pre_log_fetch_label_2.grid(row=2,column=2,padx=20,ipadx=10,columnspan=2)
+        self.pre_log_fetch_label_2.grid(row=2,column=2,padx=0,ipadx=10,columnspan=2)
         self.pre_log_fetch_entry.grid(row=1,column=2,padx=20,ipadx=10)
         self.pre_log_fetch_button.grid(row=1,column=3)
 
@@ -195,13 +200,15 @@ class App:
         self.post_log_fetch_entry=ttk.Entry(self.master,width=50)
 
         self.post_log_fetch_label_1=ttk.Label(self.master,text="Destination BSC Logs File",font="Roboto 12 bold",foreground="#ffffff",background="#00008B")
-        self.post_log_fetch_label_2=ttk.Label(self.master,text="Info: Logs of: rxmop:moty=rxstg;|rxmop:moty=rxotg;",font=("Roboto 9"),foreground="#ffffff",background="#00008B")
+        self.post_log_fetch_label_2=Text(self.master,height=1,width=40,relief="flat",font=('Roboto',12),fg="#ffffff",bg="#00008B")
+        self.post_log_fetch_label_2.insert(END,"Info: Logs of: rxmop:moty=rxstg;|rxmop:moty=rxotg;")
+        self.post_log_fetch_label_2.configure(state=DISABLED)
 
         self.post_log_fetch_button=ttk.Button(self.master,text="Browse",command=self.post_log_fetch)
 
         self.post_log_fetch_label_1.grid(row=4,column=0,padx=15,ipadx=10,columnspan=2)
         Label(self.master,background="#00008B").grid(row=3,pady=10)
-        self.post_log_fetch_label_2.grid(row=5,column=2,padx=20,ipadx=10,columnspan=2)
+        self.post_log_fetch_label_2.grid(row=5,column=2,padx=0,ipadx=10,columnspan=2)
         self.post_log_fetch_entry.grid(row=4,column=2,padx=20,ipadx=10)
         self.post_log_fetch_button.grid(row=4,column=3)
 
@@ -214,13 +221,15 @@ class App:
         self.tf_fetch_entry=ttk.Entry(self.master,width=50)
 
         self.tf_fetch_label_1=ttk.Label(self.master,text="Source BSC TF Logs",font="Roboto 12 bold",foreground="#ffffff",background="#00008B")
-        self.tf_fetch_label_2=ttk.Label(self.master,text="Info: rxmop:moty=rxstf | rxtsp:moty=rxstg;",font=("Roboto 9"),foreground="#ffffff",background="#00008B")
+        self.tf_fetch_label_2=Text(self.master,height=1,width=40,relief="flat",font=('Roboto',12),fg="#ffffff",bg="#00008B")
+        self.tf_fetch_label_2.insert(END,"Info: rxmop:moty=rxstf | rxtsp:moty=rxstg;")
+        self.tf_fetch_label_2.configure(state=DISABLED)
 
         self.tf_fetch_button=ttk.Button(self.master,text="Browse",command=self.tf_fetch)
 
         self.tf_fetch_label_1.grid(row=10,column=0,padx=15,ipadx=10,columnspan=2)
         Label(self.master,background="#00008B").grid(row=12,pady=10)
-        self.tf_fetch_label_2.grid(row=11,column=2,padx=20,ipadx=10,columnspan=2)
+        self.tf_fetch_label_2.grid(row=11,column=2,padx=10,ipadx=10,columnspan=2)
         self.tf_fetch_entry.grid(row=10,column=2,padx=20,ipadx=10)
         self.tf_fetch_button.grid(row=10,column=3)
 
@@ -240,6 +249,8 @@ class App:
         #Label(self.master,pady=7,foreground="#ffffff",background="#00008B").grid(row=9)
         self.drafted_by_label_0.grid(row=19,column=1)
         self.drafted_by_label_1.grid(row=19,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
+
+        self.master.protocol("WM_DELETE_WINDOW",lambda:self.quit_RAN_IP_Site_Migration_Tool(1))
         
         self.master.mainloop()
     
@@ -266,19 +277,19 @@ class App:
     
     def list_of_planned_cells_get(self):
         self.list_of_planned_cells_Entry.delete(0,END)
-        self.my_string=filedialog.askopenfilename(initialdir="C:\RAN",title=" Choose the Planned Cell txt",filetypes=(("Text Files","*.txt"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the Planned Cell txt",filetypes=(("Text Files","*.txt"),("All Files","*.*")))
         self.list_of_planned_cells_Entry.insert(0,self.my_string)
         self.planned_cells=self.my_string
     
     def get_json_excel(self):
         self.json_excel_text.delete(0,END)
-        self.my_string=filedialog.askopenfilename(initialdir="C:\RAN",title=" Choose the Excel File to Get New Lac",filetypes=(("Excel files (.xlsx)","*.xlsx"),("Excel files (.xls)","*.xls"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the Excel File to Get New Lac",filetypes=(("Excel files (.xlsx)","*.xlsx"),("Excel files (.xls)","*.xls"),("All Files","*.*")))
         self.json_excel_text.insert(0,self.my_string)
         self.json_excel_file=self.my_string
     
     def get_json_bsc_cell_dump(self):
         self.json_bsc_text.delete(0,END)
-        self.my_string=filedialog.askopenfilename(initialdir="C:\RAN",title=" Choose the BSC Cell Dump File ",filetypes=(("Text files (.txt)","*.txt"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the BSC Cell Dump File ",filetypes=(("Text files (.txt)","*.txt"),("All Files","*.*")))
         self.json_bsc_text.insert(0,self.my_string)
         self.json_bsc_text_file=self.my_string
 
@@ -294,11 +305,13 @@ class App:
         self.main_win.deiconify()
 
     def quit(self,event):
-        self.main_win.destroy()
         self.main_win.protocol("WM_DELETE_WINDOW",self.destroy_everything)
 
     def destroy_everything(self):
         if self.main_win.state()!='normal':
+            sys.exit(0)
+
+        elif self.main_win.state()=='normal':
             sys.exit(0)
 
     
@@ -312,6 +325,8 @@ def main():
     
     except Exception as e:
          messagebox.showerror("  Exception Occured",e)
+    
+    root.mainloop()
 
 if __name__=="__main__":
     main()

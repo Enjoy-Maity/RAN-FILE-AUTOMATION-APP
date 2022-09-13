@@ -1,5 +1,7 @@
 import json
 import pandas as pd
+from turtle import bgcolor
+from tkinter import *
 from tkinter import messagebox
 import re
 
@@ -58,7 +60,7 @@ def task(json_excel_file,json_bsc_text_file):
                                 dict2=dict()
 
                                 if len(modified_file_reader[j+1].split(":")[1])>6:
-                                    dict2["fdn"]=modified_file_reader[j+1].split(":")[1]
+                                    dict2["fdn"]=modified_file_reader[j+1].split(":")[1].strip()
                                     dict1["candidateFdn"]=modified_file_reader[j].split(":")[1][0:-15]
                                     dict1["newLac"]=str(newlac_dict[modified_file_reader[j].split(":")[1].split(",")[7].split("=")[1]])
                                     cells.append(dict1)
@@ -68,7 +70,7 @@ def task(json_excel_file,json_bsc_text_file):
                                     dict1["candidateFdn"]=modified_file_reader[j].split(":")[1][0:-15]
                                     dict1["newLac"]=str(newlac_dict[modified_file_reader[j].split(":")[1].split(",")[7].split("=")[1]])
                                     cells.append(dict1)
-                                    dict2["fdn"]=modified_file_reader[j+2].split(":")[1]
+                                    dict2["fdn"]=modified_file_reader[j+2].split(":")[1].strip()
                                     basestations.append(dict2)
                                 
                                 else:
@@ -76,33 +78,36 @@ def task(json_excel_file,json_bsc_text_file):
 
                     j=j+2
                                 
-            
+           
                     
             dict_main={"baseStations":basestations,"cells":cells,"targetNetworkController":f"NetworkElement={bsc}","technologyType": "GSM"}
-            with open(rf"C:\RAN\JSON\json_file_for_dest_bsc_{bsc}.json","w") as f:
+            with open(rf"C:\RAN_Automations\JSON\json_file_for_dest_bsc_{bsc}.json","w") as f:
                 json.dump(dict_main,f,indent=4)
             
 
-            
             if len(rejected_cells)>0:
                 messagebox.showwarning("    Rejected Cells",list(set(rejected_cells)))
-                messagebox.showinfo("   File to see the rejected cells",rf"C:\RAN\JSON\rejected_cells_dest_bsc_{bsc}.txt")
-                file1=open(rf"C:\RAN\JSON\rejected_cells_dest_bsc_{bsc}.txt","w")
+                messagebox.showinfo("   File to see the rejected cells",rf"C:\RAN_Automations\JSON\rejected_cells_dest_bsc_{bsc}.txt")
+                file1=open(rf"C:\RAN_Automations\JSON\rejected_cells_dest_bsc_{bsc}.txt","w")
                 mystr=""
                 for cell in rejected_cells:
                     mystr+=cell+"\n"
                 file1.write(mystr)
 
                 file1.close()
-            messagebox.showinfo("   File Creation was Successful",rf"C:\RAN\JSON\json_file_for_dest_bsc_{bsc}.json  was successfully created. ")
+            messagebox.showinfo("   File Creation was Successful",rf"C:\RAN_Automations\JSON\json_file_for_dest_bsc_{bsc}.json  was successfully created. ")
             
             
 
         file.close()
         
+        
     
     except Exception as e:
+       
         messagebox.showerror("  Exception Occured",e)
+
+    
 
 
 #task(r"C:\Users\emaienj\Downloads\Enjoy_JASON\Enjoy_JASON\SAMPLE_input_JSON.xlsx",r"C:\Users\emaienj\Downloads\Enjoy_JASON\Enjoy_JASON\ENM_TG_CELL_DUMP_CLI.txt")

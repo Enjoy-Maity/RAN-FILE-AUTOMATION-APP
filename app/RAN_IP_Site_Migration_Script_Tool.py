@@ -8,7 +8,7 @@ from tkinter import messagebox
 
 
 def task(prelogfile,postlogfile,planned_cells,tf_file_name):
-    try:
+    # try:
         
         tday=date.today().strftime("%d-%m-%Y")
         file=open(prelogfile,"r")
@@ -161,7 +161,11 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         for j in range(0,len(pre_chgr_list)):
             for k in range(0,len(pre_chgr_list[j])):
                 if tg_list[j][6:] in tf_offset_dict:
-                    offset.append(int(tf_offset_dict[tg_list[j][6:]]))
+                    try:
+                        offset.append(int(tf_offset_dict[tg_list[j][6:]]))
+                    except:
+                        offset.append(tf_offset_dict[tg_list[j][6:]])
+                        
                     aligntype.append(tf_aligntype_dict[tg_list[j]])
                     softsync.append(tf_softsync_dict[tg_list[j]])
                     cell_input.append(cell_input_list[j])
@@ -181,10 +185,10 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                         temp3=f"rxble:mo=rxstg-{new_tg[j]};"
                         tg_deblock_iu_destination_bsc_rxble.append(temp3)
 
-                        if tf_softsync_dict[tg_list[j]] =="ON":
+                        if len(tf_softsync_dict[tg_list[j]].strip()) ==2:
                             temp4=f"RXMSC:MO=RXSTF-{new_tg[j]},FSOFFSET={int(tf_offset_dict[tg_list[j][6:]])};"
                             temp5=f"rxtsi:mo=RXSTG-{new_tg[j]},ALIGNTYPE={tf_aligntype_dict[tg_list[j]]};"
-                        else:
+                        elif len(tf_softsync_dict[tg_list[j]].strip()) ==3:
                             temp4=""
                             temp5=""
                         
@@ -247,7 +251,7 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
 
         # print("\n length of rsite_list: ",len(rsite))
         #print(df.head())
-        workbook=rf'C:\RAN\IP_mig_dt-excel_file\IP_mig_dt_{date.today().strftime("%d-%m-%Y")}.xlsx'
+        workbook=rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\IP_mig_dt-excel_file\IP_mig_dt_{date.today().strftime("%d-%m-%Y")}.xlsx'
         writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
         df.to_excel(writer,sheet_name='Sheet 1',index=False)
         workbook=writer.book
@@ -281,20 +285,20 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         writer.save()
         writer.close()
 
-        messagebox.showinfo("   File creation was successful",f'C:\RAN\IP_mig_dt-excel_file\IP_mig_dt_{date.today().strftime("%d-%m-%Y")}.xlsx was successfully created')
+        messagebox.showinfo("   File creation was successful",f'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\IP_mig_dt-excel_file\IP_mig_dt_{date.today().strftime("%d-%m-%Y")}.xlsx was successfully created')
 
         
 
 
 
         ############################################################################################################
-        ########################    C:\RAN\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx #################
+        ########################    C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx #################
         ############################################################################################################
 
         report_dict={"CELL_INPUT":cell_input,"CHGR":chgr,"Sector":sector,"RSITE":rsite,"NEW TG":newtg,"OLD TG":oldtg}
         report_df=pd.DataFrame(report_dict)
 
-        workbook=rf'C:\RAN\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx'
+        workbook=rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx'
         writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
         report_df.to_excel(writer,sheet_name='Sheet 1',index=False)
         workbook=writer.book
@@ -325,7 +329,7 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         # for i in green_headers:
         #     worksheet.conditional_format(i,{'type':'no_blanks','format':format1})
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Date\Report_dt_{date.today().strftime("%d-%m-%Y")}.xlsx was successfully created')
             
 
         writer.save()
@@ -333,10 +337,10 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
 
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\New_TG_Defination_in_destination_bsc-{}".format(date.today().strftime("%d-%m-%Y")) ###########################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\New_TG_Defination_in_destination_bsc-{}".format(date.today().strftime("%d-%m-%Y")) ###########################
         ##################################################################################################################################################
 
-        fil=rf"C:\RAN\Destination\New_TG_Defination_in_destination_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\New_TG_Defination_in_destination_bsc-{tday}.txt"
         file=open(fil,'w')
         my_str=""
         for line in new_tg_defination_in_destination_bsc:
@@ -344,31 +348,31 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         
         file.write(my_str)
         
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Destination\New_TG_Defination_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\New_TG_Defination_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
         
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\CHGR_allocation_in_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ##############################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\CHGR_allocation_in_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ##############################
         ##################################################################################################################################################
         
         my_str=""
         for line in chgr_allocation_in_destination_bsc:
             my_str+=line+"\n"
 
-        fil=rf"C:\RAN\Destination\CHGR_allocation_in_destination_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\CHGR_allocation_in_destination_bsc-{tday}.txt"
 
         file=open(fil,'w')
         file.write(my_str)
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Destination\CHGR_allocation_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\CHGR_allocation_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
 
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\Tg_deblock_in_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ###################################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Tg_deblock_in_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ###################################
         ##################################################################################################################################################
 
-        fil=rf"C:\RAN\Destination\Tg_deblock_in_destination_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Tg_deblock_in_destination_bsc-{tday}.txt"
         file=open(fil,"w")
         my_str=""
 
@@ -380,15 +384,15 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
 
         file.write(my_str)
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Destination\Tg_deblock_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Tg_deblock_in_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         tday=date.today().strftime("%d-%m-%Y")
         
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\Cell_active_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) #####################################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Cell_active_destination_bsc-{}.format(date.today().strftime("%d-%m-%Y")) #####################################
         ##################################################################################################################################################
 
-        fil=rf"C:\RAN\Destination\Cell_active_destination_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Cell_active_destination_bsc-{tday}.txt"
         my_str=""
         for line in cell_active_in_destination_bsc:
             my_str+=line+"\n"
@@ -396,13 +400,13 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         file=open(fil,'w')
         file.write(my_str)
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Destination\Cell_active_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Cell_active_destination_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\Cell_halte_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ########################################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Cell_halte_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ########################################
         ##################################################################################################################################################
 
-        fil=rf"C:\RAN\Source\Cell_halte_in_source_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Source\Cell_halte_in_source_bsc-{tday}.txt"
         my_str=""
         for line in cell_halte_in_source_bsc:
             my_str+=line+"\n"
@@ -410,13 +414,13 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         file=open(fil,'w')
         file.write(my_str)
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Source\Cell_halte_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Source\Cell_halte_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Source\Tg_block_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ###############################################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Source\Tg_block_in_source_bsc-{}.format(date.today().strftime("%d-%m-%Y")) ###############################################
         ##################################################################################################################################################
         
-        fil=rf"C:\RAN\Source\Tg_block_in_source_bsc-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Source\Tg_block_in_source_bsc-{tday}.txt"
         file=open(fil,"w")
         my_str=""
 
@@ -428,12 +432,12 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
 
         file.write(my_str)
 
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Source\Tg_block_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\RAN_IP_Site_Migration_Tool\Source\Tg_block_in_source_bsc-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         ##################################################################################################################################################
-        ##############   C:\RAN\Destination\Softsync_dt-{}.format(date.today().strftime("%d-%m-%Y")) #####################################################
+        ##############   C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Softsync_dt-{}.format(date.today().strftime("%d-%m-%Y")) #####################################################
         ##################################################################################################################################################
-        fil=rf"C:\RAN\Destination\Softsync_dt-{tday}.txt"
+        fil=rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Softsync_dt-{tday}.txt"
         my_str=""
         for j in range(0,len(softsync_dt)):
             line=tf_offset[j]
@@ -445,7 +449,7 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         
         file=open(fil,"w")
         file.write(my_str)
-        messagebox.showinfo("   File creation was successful",rf'C:\RAN\Destination\Softsync_dt-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
+        messagebox.showinfo("   File creation was successful",rf'C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Destination\Softsync_dt-{date.today().strftime("%d-%m-%Y")}.txt was successfully created')
 
         file.close()
         file2.close()
@@ -456,14 +460,14 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         
         if len(rejected_cell_chgr)>0:
             messagebox.showwarning("    Cells for which we can't create commands",list(set(rejected_cell_chgr)))
-            messagebox.showinfo("   File to see the rejected cells",r"C:\RAN\Error_cells.txt")
+            messagebox.showinfo("   File to see the rejected cells",r"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Error_cells.txt")
             my_str=""
             for text in list(set(rejected_cell_chgr)):
                 my_str+=text+"\n"
-            file=open(r"C:\RAN\Error_cells.txt","w")
+            file=open(r"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Error_cells.txt","w")
             file.write(my_str)
         messagebox.showinfo("   Successful execution","All the files were successfully created")
 
-    except Exception as e:
-        messagebox.showerror("  Exception Occurred",e)
+    # except Exception as e:
+    #     messagebox.showerror("  Exception Occurred",e)
         
