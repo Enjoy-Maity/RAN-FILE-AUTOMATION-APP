@@ -8,7 +8,7 @@ from tkinter import messagebox
 
 
 def task(prelogfile,postlogfile,planned_cells,tf_file_name):
-    # try:
+    try:
         
         tday=date.today().strftime("%d-%m-%Y")
         file=open(prelogfile,"r")
@@ -43,27 +43,31 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                 break
 
         pre_stg_dict=dict()     # dictionary cell-input/sector:stg
+        pre_stg_rxstg_dict=dict()
         pre_chgr_dict=dict()    # dictionary cell-input/sector:chgr
         pre_stg_rsite=dict()    # dictionary cell_input/sector:rsite
         tf_offset_dict=dict()   # dictionary stg/tf:offset
         pre_stg_sector=[]
+        global tmp;tmp=0
         for j in range(i, len(modified_pre_reader)):
             line=modified_pre_reader[j].split()
             if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0:
                 if line[1] in modified_planned_cells_reader:
-                    pre_stg_dict[line[1]]=line[0]
-                    pre_chgr_dict[line[1]]=list() 
-                    pre_chgr_dict[line[1]].append(line[2])
+                    tmp=int(line[0][6:])
+                    pre_stg_rxstg_dict[tmp]=line[0]
+                    pre_stg_dict[int(line[0][6:])]=line[1]
+                    pre_chgr_dict[int(line[0][6:])]=list() 
+                    pre_chgr_dict[int(line[0][6:])].append(line[2])
             
-            elif len(line)>0 and modified_pre_reader[j].split()[0] in pre_chgr_dict:
-                pre_chgr_dict[line[0]].append(line[1])
+            elif len(line)>0 and modified_pre_reader[j].split()[0] in list(pre_stg_dict.values()):
+                pre_chgr_dict[tmp].append(line[1])
 
         
         ################################# Creating Dictionary for Rsite ###############################################
         for j in range(0,i+1):
             line=modified_pre_reader[j].split()
-            if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0 and line[0] in pre_stg_dict.values():
-                pre_stg_rsite[line[1]]=line[2]
+            if len(re.findall("\ARXSTG",modified_pre_reader[j]))>0 and int(line[0][6:]) in list(pre_stg_dict.keys()):
+                pre_stg_rsite[int(line[0][6:])]=line[2]
                 pre_stg_sector.append(line[1])
 
                     
@@ -78,16 +82,16 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                 rejected_cell_chgr.append(pre_chgr_dict_keys[j])
         
         tg_no_list=[]
-        for j in pre_stg_dict.values():
-            tg_no_list.append(j[6:])
+        for j in pre_stg_dict.keys():
+            tg_no_list.append(j)
         
 
          ################################# Creating Dictionary for tf_offset and tf softsync ###########################################
-
+        
         for j in range(0,k+1):
             line=modified_tf_file_reader[j].split()
             if len(re.findall("\ARXSTF",modified_tf_file_reader[j]))>0:
-                temp=line[0][6:]
+                temp=int(line[0][6:])
                 if temp in tg_no_list:
                     tf_offset_dict[temp]=line[1]
 
@@ -96,20 +100,21 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         for j in range(k,len(modified_tf_file_reader)):
             if len(re.findall("\ARXSTG",modified_tf_file_reader[j]))>0:
                 line=modified_tf_file_reader[j].split()
-                if line[0] in pre_stg_dict.values():
-                    tf_softsync_dict[line[0].lower()]=line[1]
+                if int(line[0][6:]) in pre_stg_dict.keys():
+                    tf_softsync_dict[int(line[0][6:])]=line[1]
                     if line[1]=="ON":
-                        tf_aligntype_dict[line[0].lower()]=line[2]
+                        tf_aligntype_dict[int(line[0][6:])]=line[2]
                     else:
-                        tf_aligntype_dict[line[0].lower()]=" "
+                        tf_aligntype_dict[int(line[0][6:])]=" "
 
 
-        tg_list=list(pre_stg_dict.values())         # getting the list of all the prelog tg
+        tg_list=list(pre_stg_dict.keys())         # getting the list of all the prelog tg
+        tg_list_rxstg=list(pre_stg_rxstg_dict.values())
         rsite_list=list(pre_stg_rsite.values())     # getting the list of all the prelog rsite
-        cell_input_list=list(pre_stg_dict.keys())   # getting the list of all cell-input/sectors
+        cell_input_list=list(pre_stg_dict.values())   # getting the list of all cell-input/sectors
 
-        for j in range(0,len(tg_list)):
-            tg_list[j]=tg_list[j].lower()
+        for j in range(0,len(tg_list_rxstg)):
+            tg_list_rxstg[j]=tg_list_rxstg[j].lower()
 
 
         file=open(postlogfile,"r")
@@ -160,11 +165,8 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         pre_chgr_list=list(pre_chgr_dict.values())
         for j in range(0,len(pre_chgr_list)):
             for k in range(0,len(pre_chgr_list[j])):
-                if tg_list[j][6:] in tf_offset_dict:
-                    try:
-                        offset.append(int(tf_offset_dict[tg_list[j][6:]]))
-                    except:
-                        offset.append(tf_offset_dict[tg_list[j][6:]])
+                if tg_list[j] in tf_offset_dict:
+                    offset.append(tf_offset_dict[tg_list[j]])
                         
                     aligntype.append(tf_aligntype_dict[tg_list[j]])
                     softsync.append(tf_softsync_dict[tg_list[j]])
@@ -172,7 +174,7 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                     chgr.append(int(pre_chgr_list[j][k]))
                     rsite.append(rsite_list[j])
                     newtg.append(new_tg[j])
-                    oldtg.append(int(tg_list[j][6:]))
+                    oldtg.append(int(tg_list[j]))
                     sector.append(pre_stg_sector[j])
                     if k==0:
                        
@@ -186,8 +188,8 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                         tg_deblock_iu_destination_bsc_rxble.append(temp3)
 
                         if len(tf_softsync_dict[tg_list[j]].strip()) ==2:
-                            temp4=f"RXMSC:MO=RXSTF-{new_tg[j]},FSOFFSET={int(tf_offset_dict[tg_list[j][6:]])};"
-                            temp5=f"rxtsi:mo=RXSTG-{new_tg[j]},ALIGNTYPE={tf_aligntype_dict[tg_list[j]]};"
+                            temp4=f"RXMSC:MO=RXSTF-{new_tg[j]},FSOFFSET={int(tf_offset_dict[tg_list[j]])};"
+                            temp5=f"rxtsi:mo=RXSTG-{(new_tg[j])},ALIGNTYPE={tf_aligntype_dict[tg_list[j]]};"
                         elif len(tf_softsync_dict[tg_list[j]].strip()) ==3:
                             temp4=""
                             temp5=""
@@ -222,10 +224,10 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
                     temp4=f"rlstc:cell={cell_input_list[j]},chgr={chgr_var},state=halted;"
                     cell_halte_in_source_bsc.append(temp4)
                     
-                    temp5=f"rxbli:mo={tg_list[j]};"
+                    temp5=f"rxbli:mo={tg_list_rxstg[j]};"
                     tg_block_source_bsc_rxbli.append(temp5)
 
-                    temp6=f"rxese:mo={tg_list[j]};"
+                    temp6=f"rxese:mo={tg_list_rxstg[j]};"
                     tg_block_source_bsc_rxese.append(temp6)
                 
                 else: 
@@ -455,8 +457,8 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
         file2.close()
         file3.close()
 
-        if len(set(modified_planned_cells_reader))-len(set(pre_stg_rsite.keys()))>0:
-            messagebox.showwarning("    Set of cells which was not included in scripts",set(modified_planned_cells_reader)-set(pre_stg_rsite.keys()))
+        if len(set(rejected_cell_chgr))>0:
+            messagebox.showwarning("    Set of cells which was not included in scripts",list(set(rejected_cell_chgr)).sort())
         
         if len(rejected_cell_chgr)>0:
             messagebox.showwarning("    Cells for which we can't create commands",list(set(rejected_cell_chgr)))
@@ -464,10 +466,10 @@ def task(prelogfile,postlogfile,planned_cells,tf_file_name):
             my_str=""
             for text in list(set(rejected_cell_chgr)):
                 my_str+=text+"\n"
-            file=open(r"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Error_cells.txt","w")
+            file=open(rf"C:\RAN_Automations\RAN_IP_Site_Migration_Tool\Error_cells_{date.today().strftime('%d-%m-%Y')}.txt","w")
             file.write(my_str)
         messagebox.showinfo("   Successful execution","All the files were successfully created")
 
-    # except Exception as e:
-    #     messagebox.showerror("  Exception Occurred",e)
+    except Exception as e:
+        messagebox.showerror("  Exception Occurred",e)
         

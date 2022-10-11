@@ -1,4 +1,5 @@
-from ast import Delete
+#from ast import Delete
+#from re import sub
 from tkinter import * 
 from tkinter import messagebox
 from PIL import ImageTk,Image
@@ -9,6 +10,11 @@ import RAN_IP_Site_Migration_Script_Tool
 import json_file_creation
 import os
 import sys
+import multiprocessing
+from multiprocessing import *
+# import time
+import threading
+#from queue import Queue
 
 class App:
     def __init__(self,main_win):
@@ -84,14 +90,20 @@ class App:
         ####################################### JSON Excel File Extraction  ######################################################
         
         self.json_excel_file=""
+        Label(self.master1, background = "#00008B").grid(row=0,column=0,pady=10)
         self.json_excel_text=ttk.Entry(self.master1,width=50)
         self.json_excel_label=ttk.Label(self.master1,text="Excel File For Json Creation",font=("Roboto 12 bold"),foreground="#FFFFFF",background="#00008B")
         self.json_excel_btn= ttk.Button(self.master1,text="Browse",command=self.get_json_excel)
-        Label(self.master1,background="#00008B").grid(row=0,column=0,pady=10)
+        self.json_excel_label_text = Text(self.master1,height=1,width=60,relief="flat",font=('Roboto',13,),fg="#ffffff",bg="#00008B")
+        self.json_excel_label_text.insert(END,"cmedit get * ChannelGroup.(connectedG31Tg,connectedG12Tg)")
+        self.json_excel_label_text.configure(state = DISABLED)
+        self.json_excel_label_text.grid(row=2,column=1,columnspan=3)
 
         self.json_excel_text.grid(row=1,column=2,padx=20,ipadx=10)
         self.json_excel_label.grid(row=1,column=0,padx=10,ipadx=10,columnspan=2)
         self.json_excel_btn.grid(row=1,column=3)
+        
+        self.json_excel_btn.focus_force()
         Label(self.master1,background="#00008B").grid(row=2,column=0,pady=10)
 
         
@@ -108,32 +120,56 @@ class App:
         self.json_bsc_btn.grid(row=4,column=3)
         Label(self.master1,background="#00008B").grid(row=5,column=0,pady=10)
 
+        #Label(self.master1,background="#00008B").grid(row=6,column=0,pady=20)
+
+        self.json_update_label_text=StringVar()
+        self.json_update_label=Label(self.master1,textvariable=self.json_update_label_text,font=("Roboto 12 bold"),foreground="#FFFFFF",background="#00008B")
+        self.json_update_label.grid(row=6,column=2,pady=20)
+
         ############################## Button For Execution ##########################
         
         start_execution=ttk.Button(self.master1,text="Prepare JSON Script",command=self.start_json_file_creation)
-        start_execution.grid(row=17,column=0,columnspan=3,pady=20,ipadx=50,padx=10,sticky=W+E)
-        Label(self.master1,background="#00008B").grid(row=6,column=0,pady=30)
+        start_execution.grid(row=8,column=0,columnspan=3,pady=20,ipadx=50,padx=10,sticky=W+E)
+        Label(self.master1,background="#00008B").grid(row=7,column=0,pady=20)
 
         exit_btn=ttk.Button(self.master1,text="Exit",command=lambda:self.quit_json_file_creation_tool(1))
-        exit_btn.grid(row=17, column=3,sticky=E)
+        exit_btn.grid(row=8, column=3,sticky=E)
 
 
 
-
+        #self.json_task_processes=[]
         #####################################  JSON Drafted By  ##################################################################
-        Label(self.master1,background="#00008B").grid(row=6,column=0,pady=80)
+        Label(self.master1,background="#00008B").grid(row=9,column=0,pady=15)
         self.drafted_by_label_0=ttk.Label(self.master1,text="              Drafted By:",font=("Roboto 15 bold"),anchor=CENTER,foreground="#ffffff",background="#00008B")
         self.drafted_by_label_1=ttk.Label(self.master1,text=" Rohit Singla R | Saurabh S. | Enjoy Maity",font=("Roboto 12"),anchor=CENTER,foreground="#ffffff",background="#00008B")
         
         #Label(self.master,pady=7,foreground="#ffffff",background="#00008B").grid(row=9)
-        self.drafted_by_label_0.grid(row=19,column=1)
-        self.drafted_by_label_1.grid(row=19,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
+        self.drafted_by_label_0.grid(row=10,column=1)
+        self.drafted_by_label_1.grid(row=10,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
 
         self.master1.protocol("WM_DELETE_WINDOW",lambda:self.quit_json_file_creation_tool(1))
         self.master1.mainloop()
         if self.master1.state()!="normal":
-            sys.exit(0)
+           sys.exit(0)
         
+    def update_json_win(self):
+        
+        ############################ Text label for execution ########################
+        match self.flag:
+            case 0:
+                #unsuccessful
+                self.json_update_label_text.set(" JSON File Creation is Unsuccessful")
+                
+
+            case 1:
+                #successful
+                self.json_update_label_text.set(" JSON File Creation is Successful")
+                
+
+            
+
+        
+
     def Ran_IP_Site_Migration_Script_Tool(self):
         self.master=Toplevel(self.main_win)
         self.main_win.withdraw()
@@ -256,19 +292,19 @@ class App:
     
     def pre_log_fetch(self):
         self.pre_log_fetch_entry.delete(0,END)
-        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the prelogs file",filetypes=(("Text files","*.txt"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the prelogs file",filetypes=(("Text files","*.txt"),('Log Files','*.log'),("All Files","*.*")))
         self.file_name=self.my_string
         self.pre_log_fetch_entry.insert(0,self.file_name)
     
     def post_log_fetch(self):
         self.post_log_fetch_entry.delete(0,END)
-        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the postlogs file",filetypes=(("Text files","*.txt"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the postlogs file",filetypes=(("Text files","*.txt"),('Log Files','*.log'),("All Files","*.*")))
         self.file_name_post=self.my_string
         self.post_log_fetch_entry.insert(0,self.file_name_post)
     
     def tf_fetch(self):
         self.tf_fetch_entry.delete(0,END)   # Deletes the entry on the entry
-        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the postlogs file",filetypes=(("Text files","*.txt"),("All Files","*.*")))
+        self.my_string=filedialog.askopenfilename(initialdir="C:\\",title=" Choose the postlogs file",filetypes=(("Text files","*.txt"),('Log Files','*.log'),("All Files","*.*")))
         self.tf_file_name=self.my_string
         self.tf_fetch_entry.insert(0,self.tf_file_name)
     
@@ -294,9 +330,43 @@ class App:
         self.json_bsc_text_file=self.my_string
 
     def start_json_file_creation(self):
-        json_file_creation.task(self.json_excel_file,self.json_bsc_text_file)
+        self.json_update_label_text.set(" Creating JSON File, Please Wait Patiently!")
+        te=threading.Thread(target=self.start_json_file_creation_task,args=())
+        te.daemon=True
+        self.master1.after(2000,te.start())
+        
+    def start_json_file_creation_task(self):
+        try:
+            self.flag=10
+            #self.update_json_win()
+            
+            
+            #self.executor=concurrent.futures.ThreadPoolExecutor()
+            #threading.Thread(target=json_file_creation.task,args=(self.json_excel_file,self.json_bsc_text_file,self.flag))
+            # self.task_args=[]
+            # self.task_args.extend((self.json_excel_file,self.json_bsc_text_file,self.flag))
+            # self.executor=ThreadPool(processes=1)
+            # self.executor_thread=self.executor.apply(json_file_creation.task,self.task_args)
+            # self.flag=self.executor_thread.get()
+            self.t=threading.Thread(target=json_file_creation.task,args=(self.json_excel_file,self.json_bsc_text_file))
+            self.t.daemon=True
+            
+            self.t.start()
+            #self.json_task_processes.append(self.t)
+            self.t.join()
+            self.flag=1
+            self.update_json_win()
+        except Exception as e:
+            self.flag=0
+            messagebox.showerror("  Exception Occured",e)
+            self.update_json_win()
+
+        
 
     def quit_json_file_creation_tool(self,event):
+        # if len(self.json_task_processes)>0:
+        #     for process in self.json_task_processes:
+        #         process.terminate
         self.master1.destroy()
         self.main_win.deiconify()
 
