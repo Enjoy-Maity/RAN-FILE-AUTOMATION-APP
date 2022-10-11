@@ -94,10 +94,7 @@ class App:
         self.json_excel_text=ttk.Entry(self.master1,width=50)
         self.json_excel_label=ttk.Label(self.master1,text="Excel File For Json Creation",font=("Roboto 12 bold"),foreground="#FFFFFF",background="#00008B")
         self.json_excel_btn= ttk.Button(self.master1,text="Browse",command=self.get_json_excel)
-        self.json_excel_label_text = Text(self.master1,height=1,width=60,relief="flat",font=('Roboto',13,),fg="#ffffff",bg="#00008B")
-        self.json_excel_label_text.insert(END,"cmedit get * ChannelGroup.(connectedG31Tg,connectedG12Tg)")
-        self.json_excel_label_text.configure(state = DISABLED)
-        self.json_excel_label_text.grid(row=2,column=1,columnspan=3)
+        
 
         self.json_excel_text.grid(row=1,column=2,padx=20,ipadx=10)
         self.json_excel_label.grid(row=1,column=0,padx=10,ipadx=10,columnspan=2)
@@ -113,39 +110,43 @@ class App:
         self.json_bsc_text=ttk.Entry(self.master1,width=50)
         self.json_bsc_label=ttk.Label(self.master1,text="Base Stations ENM Cell Dump",font=("Roboto 12 bold"),foreground="#FFFFFF",background="#00008B")
         self.json_bsc_btn= ttk.Button(self.master1,text="Browse",command=self.get_json_bsc_cell_dump)
-        Label(self.master1,background="#00008B").grid(row=3,column=0,pady=10)
+        self.json_bsc_label_text = Text(self.master1,height=1,width=63,relief="flat",font=('Roboto',13,'bold'),fg="#ffffff",bg="#00008B")
+        self.json_bsc_label_text.insert(END,"Info: cmedit get * ChannelGroup.(connectedG31Tg,connectedG12Tg)")
+        self.json_bsc_label_text.configure(state = DISABLED)
+        # Label(self.master1,background="#00008B")
+        self.json_bsc_label_text.grid(row=5,column=1,columnspan=3,pady=10)
 
         self.json_bsc_text.grid(row=4,column=2,padx=20,ipadx=10)
         self.json_bsc_label.grid(row=4,column=0,padx=10,ipadx=10,columnspan=2)
         self.json_bsc_btn.grid(row=4,column=3)
-        Label(self.master1,background="#00008B").grid(row=5,column=0,pady=10)
+        Label(self.master1,background="#00008B").grid(row=6,column=0,pady=20)
 
         #Label(self.master1,background="#00008B").grid(row=6,column=0,pady=20)
 
         self.json_update_label_text=StringVar()
         self.json_update_label=Label(self.master1,textvariable=self.json_update_label_text,font=("Roboto 12 bold"),foreground="#FFFFFF",background="#00008B")
-        self.json_update_label.grid(row=6,column=2,pady=20)
+        self.json_update_label.grid(row=7,column=2,pady=20)
 
         ############################## Button For Execution ##########################
         
         start_execution=ttk.Button(self.master1,text="Prepare JSON Script",command=self.start_json_file_creation)
-        start_execution.grid(row=8,column=0,columnspan=3,pady=20,ipadx=50,padx=10,sticky=W+E)
-        Label(self.master1,background="#00008B").grid(row=7,column=0,pady=20)
+        start_execution.grid(row=9,column=0,columnspan=3,pady=20,ipadx=50,padx=10,sticky=W+E)
+        Label(self.master1,background="#00008B").grid(row=8,column=0,pady=20)
 
         exit_btn=ttk.Button(self.master1,text="Exit",command=lambda:self.quit_json_file_creation_tool(1))
-        exit_btn.grid(row=8, column=3,sticky=E)
+        exit_btn.grid(row=9, column=3,sticky=E)
 
 
 
         #self.json_task_processes=[]
         #####################################  JSON Drafted By  ##################################################################
-        Label(self.master1,background="#00008B").grid(row=9,column=0,pady=15)
+        Label(self.master1,background="#00008B").grid(row=10,column=0,pady=15)
         self.drafted_by_label_0=ttk.Label(self.master1,text="              Drafted By:",font=("Roboto 15 bold"),anchor=CENTER,foreground="#ffffff",background="#00008B")
         self.drafted_by_label_1=ttk.Label(self.master1,text=" Rohit Singla R | Saurabh S. | Enjoy Maity",font=("Roboto 12"),anchor=CENTER,foreground="#ffffff",background="#00008B")
         
         #Label(self.master,pady=7,foreground="#ffffff",background="#00008B").grid(row=9)
-        self.drafted_by_label_0.grid(row=10,column=1)
-        self.drafted_by_label_1.grid(row=10,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
+        self.drafted_by_label_0.grid(row=11,column=1)
+        self.drafted_by_label_1.grid(row=11,column=2,columnspan=2,padx=20,ipadx=20,sticky=E)
 
         self.master1.protocol("WM_DELETE_WINDOW",lambda:self.quit_json_file_creation_tool(1))
         self.master1.mainloop()

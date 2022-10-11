@@ -3,6 +3,7 @@ import pandas as pd
 from tkinter import messagebox
 #import time
 from threading import *
+# from iteration_utilities import everseen
 # from queue import Queue
 
 # queue=Queue()
@@ -199,7 +200,8 @@ def task(json_excel_file,json_text_file):
                 f.write(mystr)
                 messagebox.showinfo("   File to see the rejected cells",rf"C:\RAN_Automations\JSON\rejected_cells_dest_bsc_{bsc}.txt")
                 f.close()
-
+        basestations = [dict(tuple) for tuple in {tuple(sorted(dict.items())) for dict in basestations}]
+        cells = [dict(tuple) for tuple in {tuple(sorted(dict.items())) for dict in cells}]
         dict_main={"baseStations":basestations,"cells":cells,"targetNetworkController":f"NetworkElement={bsc}","technologyType": "GSM"}
         with open(rf"C:\RAN_Automations\JSON\json_file_for_dest_bsc_{bsc}.json","w") as f:
             json.dump(dict_main,f,indent=4)
@@ -220,4 +222,4 @@ def task(json_excel_file,json_text_file):
 
     
 
-#task(r"C:\Users\emaienj\Downloads\SAMPLE_input_JSON.xlsx",r"C:\Users\emaienj\Downloads\dump.txt")
+task(r"C:\Users\emaienj\Downloads\SAMPLE_input_JSON.xlsx",r"C:\Users\emaienj\Downloads\dump.txt")
