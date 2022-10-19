@@ -112,12 +112,13 @@ def task(json_excel_file,json_text_file):
             sheet_name=sheet
     
     excel_file=pd.read_excel(workbook,sheet_name)
+    excel_file.fillna(-1,inplace = True)
     cell_newlac_dict=dict()
     cell_source_bsc_dict=dict()
     unique_destination_bsc=list(excel_file['Destination BSC'].unique())
     dest_bsc_cell_dict=dict()
     for i in range(0,len(excel_file)):
-            cell_newlac_dict[excel_file.iloc[i]['Cell Name']]=str(excel_file.iloc[i]['newlac'])
+            cell_newlac_dict[excel_file.iloc[i]['Cell Name']]= excel_file.iloc[i]['newlac']
             cell_source_bsc_dict[excel_file.iloc[i]['Cell Name']]=excel_file.iloc[i]['Source BSC']
             if excel_file.iloc[i]['Destination BSC'] not in dest_bsc_cell_dict:
                 dest_bsc_cell_dict[excel_file.iloc[i]['Destination BSC']]=set()
@@ -163,7 +164,7 @@ def task(json_excel_file,json_text_file):
     #     cell_tg_dict[cell]=list(cell_tg_dict[cell])
     #     cell_fdn_dict[cell]=list(cell_fdn_dict[cell])
     #     cell_tg_dict[cell].sort()
-    
+    #print(type(cell_newlac_dict['3SECDW1']))
     for bsc in unique_destination_bsc:
         rejected_cells=[]
         basestations=[]
@@ -176,9 +177,13 @@ def task(json_excel_file,json_text_file):
                 #     case 1:
                 dict1['fdn']=cell_tg_dict[cell]
                 dict2['candidateFdn']=cell_fdn_dict[cell]
-                dict2['newLac']=cell_newlac_dict[cell]
-                basestations.append(dict1)
-                cells.append(dict2)
+                if (cell_newlac_dict[cell]) > 0:
+                    dict2['newLac'] = str(int(float(cell_newlac_dict[cell])))
+                    basestations.append(dict1)
+                    cells.append(dict2)
+                else:
+                    basestations.append(dict1)
+                    cells.append(dict2)
                     
                     # case _:
                     #     for i in range(0,len(cell_tg_dict[cell])):
@@ -222,4 +227,4 @@ def task(json_excel_file,json_text_file):
 
     
 
-task(r"C:\Users\emaienj\Downloads\SAMPLE_input_JSON.xlsx",r"C:\Users\emaienj\Downloads\dump.txt")
+task(r"C:\Users\emaienj\Downloads\Enjoy_JASON\Enjoy_JASON\SAMPLE_input_JSON.xlsx",r"C:\Users\emaienj\Downloads\Enjoy_JASON\Enjoy_JASON\ENM_TG_CELL_DUMP_CLI.txt")
